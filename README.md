@@ -1,49 +1,116 @@
-# smalloc
+# Malloc Library
 
-smalloc is a simple memory allocator implemented in C.
-
-It provides custom implementations for `malloc()`, `calloc()`, `realloc()`, and `free()`, allowing for manual management of dynamic memory allocation in C programs.
+Malloc is a simple custom memory allocator library implemented in C. It provides implementations for the standard memory management functions `malloc()`, `calloc()`, `realloc()`, and `free()`. This library can be used as a replacement for the standard memory allocation routines in C.
 
 ## Features
 
-- **malloc()**: Allocates a block of memory of a specified size.
-- **calloc()**: Allocates an array of blocks, initializing all bytes to zero.
-- **realloc()**: Resizes a previously allocated block of memory.
-- **free()**: Frees a previously allocated block of memory, making it available for future allocations.
+- **malloc(size_t size)**: Allocates a block of memory of the specified size.
+- **calloc(size_t num, size_t nsize)**: Allocates an array of blocks, initializing all bytes to zero.
+- **realloc(void *block, size_t size)**: Resizes a previously allocated block of memory.
+- **free(void *block)**: Frees a previously allocated block of memory, making it available for future allocations.
 
-## Compile and Run
+## Overview
 
-To compile `smalloc`, you can use the following command:
+### Previous Implementation
 
-```bash
-gcc -o smalloc.so -fPIC -shared smalloc.c
-```
+The initial implementation of this library used the `sbrk` function for memory allocation on Unix-like systems. However, `sbrk` is considered outdated and not recommended for modern applications, as it is not thread-safe and can lead to fragmentation and other issues.
 
-- `fPIC`: Generates position-independent code (PIC), which is a requirement for creating shared libraries.
-- `shared`: Produces a shared object which can be loaded dynamically.
+### Current Implementation
 
-## Using `smalloc` as a Shared Library
+The new version of this library uses `mmap` on Unix-like systems and `VirtualAlloc` on Windows for memory allocation. These methods provide better control over memory management and are more suitable for modern multi-threaded environments.
 
-With `LD_PRELOAD` set, any subsequent commands run in the same shell session will use smalloc for memory allocation. For example:
+## Building the Library
 
-```bash
-ls
-vim somefile.txt
-```
+### On Unix-like Systems
 
-You can also run your own programs with `smalloc` to test its functionality.
-
-## Stopping the Use of `smalloc`
-
-To stop using `smalloc`, simply unset the `LD_PRELOAD` environment variable:
+To compile and create a shared library (`.so`), run:
 
 ```bash
-unset LD_PRELOAD
+gcc -shared -o libmalloc.so malloc.c
 ```
 
-This will revert to the system's default memory allocation functions.
+- `-shared`: Tells the compiler to create a shared object (dynamic library).
+- `-o libmalloc.so`: Specifies the output file name.
 
-## Note
+### On Windows
 
-This project is intended for educational purposes and to demonstrate the basics of implementing a memory allocator. 
-It is not optimized for production use and may not handle all edge cases or provide the same level of safety and efficiency as standard memory allocators.
+To compile and create a shared library (.dll), run:
+
+```bash
+gcc -shared -o malloc.dll malloc.c -D_SMALLOC_EXPORTS
+```
+- `-shared`: Tells the compiler to create a shared object (DLL).
+- `-D_SMALLOC_EXPORTS`: Define to export the functions.
+
+## Using the Library
+
+### On Unix-like Systems
+
+1. Set the `LD_LIBRARY_PATH` environment variable to include the directory where `libmalloc.so` is located:
+
+```bash
+export LD_LIBRARY_PATH=/path/to/directory
+```
+
+2. Compile your program that uses the library:
+
+```bash
+gcc -o myprogram myprogram.c -L/path/to/directory -lmalloc
+```
+
+3. Run your program:
+
+```bash
+./myprogram
+```
+
+### On Windows
+
+1. Ensure `malloc.dll` is in the same directory as your executable or in a directory included in the system `PATH`.
+
+2. Compile your program that uses the library:
+
+```bash
+gcc -o myprogram myprogram.c -L/path/to/directory -lmallo
+```
+
+3. Run your program:
+
+```bash
+myprogram.exe
+```
+
+## Example Usage
+
+Here is a simple example program (`test.c`) that uses the malloc library:
+
+```c
+#include <stdio.h>
+#include "malloc.h"
+
+int main() {
+    void *ptr = malloc(100);
+    if (ptr == NULL) {
+        printf("malloc failed\n");
+        return 1;
+    }
+    printf("Allocated 100 bytes at %p\n", ptr);
+
+    free(ptr);
+    printf("Memory freed successfully.\n");
+
+    return 0;
+}
+```
+
+1. Compile the example with:
+
+```bash
+gcc -o test test.c -L. -lmalloc
+```
+
+2. Run the example:
+
+```bash
+myprogram.exe
+```
