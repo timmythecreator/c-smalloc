@@ -1,4 +1,4 @@
-#include "smalloc.h"
+#include "malloc.h"
 #include <stdlib.h>
 #include <string.h>
 
