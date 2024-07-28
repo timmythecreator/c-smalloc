@@ -71,7 +71,7 @@ gcc -o myprogram myprogram.c -L/path/to/directory -lmalloc
 2. Compile your program that uses the library:
 
 ```bash
-gcc -o myprogram myprogram.c -L/path/to/directory -lmallo
+gcc -o myprogram myprogram.c -L/path/to/directory -lmalloc
 ```
 
 3. Run your program:
@@ -114,3 +114,8 @@ gcc -o test test.c -L. -lmalloc
 ```bash
 myprogram.exe
 ```
+
+## Note
+
+This project is intended for educational purposes and to demonstrate the basics of implementing a memory allocator. 
+It is not optimized for production use and may not handle all edge cases or provide the same level of safety and efficiency as standard memory allocators.
