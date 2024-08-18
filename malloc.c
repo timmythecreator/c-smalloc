@@ -2,11 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef _WIN32
-#include <windows.h>
-#else
-#include <sys/mman.h>
-#include <unistd.h>
+#ifdef WINDOWS_SYSTEM
+    #include <windows.h>
+#elif UNIX_SYSTEM
+    #include <sys/mman.h>
+    #include <unistd.h>
 #endif
 
 static header_t *head = NULL, *tail = NULL;
@@ -20,7 +20,7 @@ static header_t *get_free_block(size_t size) {
     return NULL;
 }
 
-void *malloc(size_t size) {
+void *smalloc(size_t size) {
     size_t total_size;
     void *block;
     header_t *header;
@@ -35,9 +35,9 @@ void *malloc(size_t size) {
 
     total_size = sizeof(header_t) + size;
 
-#ifdef _WIN32
+#ifdef WINDOWS_SYSTEM
     block = VirtualAlloc(NULL, total_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-#else
+#elif UNIX_SYSTEM
     block = mmap(NULL, total_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 #endif
 
@@ -57,20 +57,20 @@ void *malloc(size_t size) {
     return (void*)(header + 1);
 }
 
-void free(void *block) {
+void sfree(void *block) {
     header_t *header;
 
     if (!block) return;
 
     header = (header_t*)block - 1;
 
-#ifdef _WIN32
+#ifdef WINDOWS_SYSTEM
     if ((char*)block + header->s.size == (char*)tail + sizeof(header_t)) {
         VirtualFree(header, 0, MEM_RELEASE);
     } else {
         header->s.is_free = 1;
     }
-#else
+#elif UNIX_SYSTEM
     if ((char*)block + header->s.size == (char*)tail + sizeof(header_t)) {
         munmap(header, sizeof(header_t) + header->s.size);
     } else {
@@ -79,7 +79,7 @@ void free(void *block) {
 #endif
 }
 
-void *calloc(size_t num, size_t nsize) {
+void *scalloc(size_t num, size_t nsize) {
     size_t size;
     void *block;
 
@@ -88,18 +88,18 @@ void *calloc(size_t num, size_t nsize) {
     size = num * nsize;
     if (nsize != size / num) return NULL;
 
-    block = malloc(size);
+    block = smalloc(size);
     if (!block) return NULL;
 
     memset(block, 0, size);
     return block;
 }
 
-void *realloc(void *block, size_t size) {
+void *srealloc(void *block, size_t size) {
     header_t *header;
     void *ret;
 
-    if (!block) return malloc(size);
+    if (!block) return smalloc(size);
 
     header = (header_t*)block - 1;
     if (header->s.size >= size) return block;
@@ -107,7 +107,7 @@ void *realloc(void *block, size_t size) {
     ret = malloc(size);
     if (ret) {
         memcpy(ret, block, header->s.size);
-        free(block);
+        sfree(block);
     }
     return ret;
 }

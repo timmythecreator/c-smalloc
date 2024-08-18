@@ -1,16 +1,17 @@
 #ifndef MALLOC_H
 #define MALLOC_H
 
+#include "platform.h"
 #include <stddef.h>
 
-#ifdef _WIN32
+#ifdef WINDOWS_SYSTEM
   #ifdef SMALLOC_EXPORTS
-    #define MALLOC_API __declspec(dllexport)
+    #define SMALLOC_API __declspec(dllexport)
   #else
-    #define MALLOC_API __declspec(dllimport)
+    #define SMALLOC_API __declspec(dllimport)
   #endif
 #else
-  #define MALLOC_API
+  #define SMALLOC_API
 #endif
 
 typedef char ALIGN[16];
@@ -25,9 +26,9 @@ union header {
 };
 typedef union header header_t;
 
-MALLOC_API void *malloc(size_t size);
-MALLOC_API void free(void *block);
-MALLOC_API void *calloc(size_t num, size_t nsize);
-MALLOC_API void *realloc(void *block, size_t size);
+SMALLOC_API void *smalloc(size_t size);
+SMALLOC_API void sfree(void *block);
+SMALLOC_API void *scalloc(size_t num, size_t nsize);
+SMALLOC_API void *srealloc(void *block, size_t size);
 
-#endif
+#endif // MALLOC_H
